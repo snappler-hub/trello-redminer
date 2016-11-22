@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Trello Redminer",
+  "version": "0.1",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://trello.com/*"
+      ],
+      "js": ["jquery-3.1.1.min.js", "content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "web_accessible_resources": ["inbox.svg"],
+  "options_page": "options.html",
+  "permissions": [
+    "storage", "http://redmine.snappler.com/*", "https://www.google.com/search?*"
+  ],
+  "background": {
+    "scripts": ["jquery-3.1.1.min.js", "background.js"]
+  }
+}

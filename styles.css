@@ -1,0 +1,26 @@
+.trello-redminer {
+  display: none;
+  position: fixed !important;
+  left: 50% !important;
+  top: 200px !important;
+  margin-left: -150px;
+}
+
+.trello-redminer > input,
+.trello-redminer > button {
+  margin: 0px !important;
+  min-height: 20px !important;
+}
+.trello-redminer > .hours {
+  width: 40px !important;
+}
+
+.trello-redminer > .comments {
+}
+
+.trello-redminer > button {
+}
+
+.trello-redminer > button > span {
+  color: white !important;
+}
