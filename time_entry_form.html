@@ -1,0 +1,17 @@
+<div class="trello-redminer pop-over is-shown">
+  <div class="pop-over-header">
+    <span class="pop-over-header-title"> Horas Redmine </span>
+    <a href="javascript: $('.trello-redminer').toggle()" data-behavior="trelloRedminerToggler" class="pop-over-header-close-btn icon-sm icon-close"></a>
+  </div>
+  <div class="pop-over-content">
+    <label for="js-time-entry-hours"> Horas </label>
+    <input type="text" placeholder="Horas" id="js-time-entry-hours" class="hours" value="1">
+
+    <label for="js-time-entry-comments"> Comentarios </label>
+    <input type="text" placeholder="Comentario" id="js-time-entry-comments" class="comments">
+
+    <button data-behavior="submitTimeEntry" class="primary wide" >
+      Enviar
+    </button>
+  </div>
+</div>

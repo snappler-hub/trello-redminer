@@ -1,5 +1,4 @@
 .trello-redminer {
-  display: none;
   position: fixed !important;
   left: 50% !important;
   top: 200px !important;
@@ -22,5 +21,22 @@
 }
 
 .trello-redminer > button > span {
+  color: white !important;
+}
+
+
+.trello-redminer-board-options {
+  position: fixed !important;
+  left: 50% !important;
+  top: 100px !important;
+  margin-left: -150px;
+}
+
+.trello-redminer-board-options > input,
+.trello-redminer-board-options > button {
+  margin: 0px !important;
+  min-height: 20px !important;
+}
+.trello-redminer-board-options > button > span {
   color: white !important;
 }

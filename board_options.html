@@ -1,0 +1,22 @@
+<div class="trello-redminer-board-options pop-over is-shown">
+  <div class="pop-over-header">
+    <span class="pop-over-header-title"> Opciones del tablero </span>
+    <a href="javascript: $('.trello-redminer-board-options').toggle()" class="pop-over-header-close-btn icon-sm icon-close"></a>
+  </div>
+  <div class="pop-over-content">
+    <label for="js-redmine-url">URL Redmine</label>
+    <input type="text" placeholder="Ingresa la Url" class="js-redmine-url">
+
+    <label for="js-api-key"> API KEY </label>
+    <input type="text" placeholder="API KEY" class="js-api-key">
+
+    <label for="js-project-id"> ID Proyecto </label>
+    <input type="text" placeholder="ID Proyecto" class="js-project-id">
+
+    <p class="status"></p>
+
+    <button data-behavior="submitBoardOptions" class="primary wide" >
+      Enviar
+    </button>
+  </div>
+</div>

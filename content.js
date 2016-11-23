@@ -4,122 +4,71 @@
 ** Snappler - http://www.snappler.com
 */
 
-var REDMINE_URL = 'https://www.google.com/search?q=%http://redmine.snappler.com';
-var API_KEY = 'e407baf7a930b2fb3b1f4256d9d6243fcc933254';
-var REDMINE_PROJECT_ID = 'aero-api-operador-prestardor';
+var REDMINE_URL = 'http://redmine.snappler.com';
+var board_id = document.location.href.match(/b\/([A-Za-z0-9]{8})\//)[1];
 
 TrelloRedminer = (function() {
+
+  // Constructor
   function TrelloRedminer() {
-    _this = this;
+    new TrelloRedminerBoardOptions(this);
+
     observer = new TrelloRedminerObserver(this);
     observer.start();
-
-    chrome.storage.sync.get({
-      api_url: REDMINE_URL,
-      api_key: API_KEY
-    }, function(items) {
-      _this.api_url = items.api_url
-      _this.api_key = items.api_key
-      // _this.buildUI();
-      // _this.bindEvents();
-    });
   }
 
-  TrelloRedminer.prototype.buildUI2 = function() {
-    $('.board-header-btns.mod-left').append(
-      '<a data-behavior="trelloRedminerToggler" class="board-header-btn" href="#" title="Grabar tiempo en redmine">' +
-        '<span class="icon-sm icon-clock board-header-btn-icon"></span>' +
-        '<span class="board-header-btn-text">Redmine</span>' +
-      '</a>' +
-      '<div class="trello-redminer">' +
-        '<input type="text" placeholder="Horas" id="js-time-entry-hours" class="hours" value="1">' +
-        '<input type="text" placeholder="Comentario" id="js-time-entry-comments" class="comments">' +
-        '<button data-behavior="submitTimeEntry" class="btn-link primary" > ' +
-          '<span class="icon-sm icon-check"></span> ' +
-        '</button>' +
-      '</div>'
-    );
-  };
-
-  TrelloRedminer.prototype.bindEvents = function() {
-    chrome.runtime.onMessage.addListener(
-      function(request, sender, sendResponse) {
-        if(request.success) {
-          $('.trello-redminer').hide();
-        } else {
-          alert('Se rotió! Y si...las cosas se rompen.');
-          console.log(request);
-        }
-      }
-    );
-
-    $('[data-behavior="trelloRedminerToggler"]').click(function() {
-        $('.trello-redminer').toggle();
-    });
-
-    $('[data-behavior="submitTimeEntry"]').click((function(_this) {
-      return function() {
-        var hours = $('#js-time-entry-hours').val();
-        var comments = $('#js-time-entry-comments').val();
-        chrome.runtime.sendMessage(
-          {hours: hours, comments: comments, key: API_KEY},
-          function(response) {
-
-          }
-        );
-      };
-    })(this));
-  };
-
-  TrelloRedminer.prototype.buildUI = function() {
+  TrelloRedminer.prototype.onCardOpened = function() {
     if($('[data-behavior="trelloRedminerToggler"]').length !== 0) {
       return false;
     }
 
     var card_title = $('.js-title-helper').html();
+
     $('.other-actions > .u-clearfix').prepend(
       '<a data-behavior="trelloRedminerToggler" class="button-link" href="#">' +
         '<span class="icon-sm icon-clock"></span>&nbsp;Redmine'+
-      '</a>' +
-      '<div class="trello-redminer pop-over">' +
-        '<div class="pop-over-header">' +
-          '<span class="pop-over-header-title"> Horas Redmine </span>' +
-          '<a href="#" data-behavior="trelloRedminerToggler" class="pop-over-header-close-btn icon-sm icon-close"></a>' +
-        '</div>'+
-        '<div class="pop-over-content">'+
-          '<label for="js-time-entry-hours"> Horas </label>'+
-          '<input type="text" placeholder="Horas" id="js-time-entry-hours" class="hours" value="1">' +
-
-          '<label for="js-time-entry-comments"> Comentarios </label>'+
-          '<input type="text" placeholder="Comentario" id="js-time-entry-comments" class="comments" value="'+card_title+'">' +
-
-          '<button data-behavior="submitTimeEntry" class="primary wide" > ' +
-            'Enviar' +
-          '</button>' +
-        '</div>' +
-      '</div>'
+      '</a>'
     );
+
     $('[data-behavior="trelloRedminerToggler"]').click(function() {
-        $('.trello-redminer').toggle();
-    });
-
-    $('[data-behavior="submitTimeEntry"]').click((function(_this) {
-      return function() {
-        var hours = $('#js-time-entry-hours').val();
-        var comments = $('#js-time-entry-comments').val();
+      if($('.trello-redminer').length == 0) {
         chrome.runtime.sendMessage(
-          {hours: hours, comments: comments, key: API_KEY},
-          function(response) {
+          {cmd: 'time_entry_form'},
+          function(html) {
+            $('.other-actions > .u-clearfix').prepend(html);
+            $('#js-time-entry-comments').val(card_title);
 
+            $('[data-behavior="submitTimeEntry"]').click((function(_this) {
+              return function() {
+                var hours = $('#js-time-entry-hours').val();
+                var comments = $('#js-time-entry-comments').val();
+                chrome.runtime.sendMessage(
+                  {cmd: 'send_time_entry', hours: hours, comments: comments, board_id: board_id},
+                  function(response) {
+                    if(response.time_entry) {
+                      $('.trello-redminer').hide();
+                    } else {
+                      alert('Se rotió! Y si...las cosas se rompen.');
+                      console.log(response);
+                    }
+                  }
+                );
+              };
+            })(this));
           }
         );
-      };
-    })(this));
+      } else {
+        $('.trello-redminer').toggle();
+      }
+    });
+
   };
 
   return TrelloRedminer;
 })();
 
+
+// ----------- OBSERVER ------------------
 
 TrelloRedminerObserver = (function() {
   function TrelloRedminerObserver(caller) {
@@ -127,8 +76,7 @@ TrelloRedminerObserver = (function() {
       $.each(mutations, function(index, mutation) {
         var $target = $(mutation.target);
         if($target.hasClass('js-tab-parent')) {
-          console.log('Modal abierto');
-          caller.buildUI()
+          caller.onCardOpened()
         }
       });
     });
@@ -140,6 +88,55 @@ TrelloRedminerObserver = (function() {
 
   return TrelloRedminerObserver;
 })();
+
+// ----------- BOARD OPTIONS -------------
+TrelloRedminerBoardOptions = (function() {
+  function TrelloRedminerBoardOptions(caller) {
+    $('.board-header-btns.mod-left').append(
+      '<a data-behavior="board-options" class="board-header-btn" href="#">' +
+        '<span class="board-header-btn-icon icon-sm icon-clock"></span>' +
+        '<span class="board-header-btn-text">Redmine</span>' +
+      '</a>'
+    );
+    $('[data-behavior=board-options]').click(this.openBoardOptions)
+  }
+
+  TrelloRedminerBoardOptions.prototype.openBoardOptions = function() {
+    chrome.runtime.sendMessage(
+      {cmd: 'board_options'},
+      function(html) {
+        $('body').append(html);
+        var stored = {};
+        stored[board_id] = { api_key: '', project_id: '', redmine_url: REDMINE_URL };
+        chrome.storage.sync.get(stored, function(items) {
+          $('.trello-redminer-board-options .js-redmine-url').val(items[board_id].redmine_url);
+          $('.trello-redminer-board-options .js-api-key').val(items[board_id].api_key);
+          $('.trello-redminer-board-options .js-project-id').val(items[board_id].project_id);
+        });
+
+        $('[data-behavior=submitBoardOptions]').click(function() {
+          var api_key = $('.trello-redminer-board-options .js-api-key').val();
+          var project_id = $('.trello-redminer-board-options .js-project-id').val();
+          var redmine_url = $('.trello-redminer-board-options .js-redmine-url').val();
+          var store = {};
+          store[board_id] = { api_key: api_key, project_id: project_id, redmine_url: redmine_url };
+
+          chrome.storage.sync.set(store, function() {
+            var status = $('.trello-redminer-board-options .status');
+            status.html('Opciones guardadas.');
+            setTimeout(function() {
+              status.html('');
+            }, 1000);
+          });
+
+        });
+      }
+    );
+  };
+
+  return TrelloRedminerBoardOptions;
+})();
+
 
 // -------------------
 new TrelloRedminer();

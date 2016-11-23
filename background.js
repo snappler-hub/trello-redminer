@@ -1,30 +1,47 @@
-var REDMINE_URL = 'http://redmine.snappler.com';
-var API_KEY = 'e407baf7a930b2fb3b1f4256d9d6243fcc933254';
-var REDMINE_PROJECT_ID = 'aero-api-operador-prestardor';
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    $.ajax({
-      type: 'POST',
-      url: REDMINE_URL+'/time_entries.json',
-      data: {
-        time_entry: {
-          hours: request.hours,
-          comments: request.comments,
-          project_id: REDMINE_PROJECT_ID
-        },
-        key: API_KEY,
-      },
-      success: function(data) {
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-          chrome.tabs.sendMessage(tabs[0].id, {success: true, message: 'Guardado'}, function(){});
-        });
-      },
-      error: function(e) {
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-          chrome.tabs.sendMessage(tabs[0].id, {success: false, message: e}, function(){});
-        });
-      }
-    });
 
-    sendResponse({status: "yeah!", response: request});
+    // SEND TIME ENTRY
+    if(request.cmd == 'send_time_entry') {
+      var stored = {};
+      stored[request.board_id] = { api_key: '', project_id: '', redmine_url: '' };
+      chrome.storage.sync.get(stored, function(items) {
+        $.ajax({
+          type: 'POST',
+          url: items[request.board_id].redmine_url + '/time_entries.json',
+          data: {
+            time_entry: {
+              hours: request.hours,
+              comments: request.comments,
+              project_id: items[request.board_id].project_id
+            },
+            key: items[request.board_id].api_key,
+          },
+          success: sendResponse,
+          error: sendResponse
+        });
+
+      });
+    }
+
+    // BOARD OPTIONS
+    if(request.cmd == 'board_options') {
+			$.ajax({
+				url: chrome.extension.getURL("board_options.html"),
+				dataType: "html",
+				success: sendResponse
+			});
+		}
+
+    // TIME ENTRY FORM
+    if(request.cmd == 'time_entry_form') {
+			$.ajax({
+				url: chrome.extension.getURL("time_entry_form.html"),
+				dataType: "html",
+				success: sendResponse
+			});
+		}
+
+    return true;
+
   });
