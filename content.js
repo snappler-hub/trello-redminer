@@ -6,6 +6,7 @@
 
 var REDMINE_URL = 'http://redmine.snappler.com';
 var board_id = document.location.href.match(/b\/([A-Za-z0-9]{8})\//)[1];
+var options_loaded = false;
 
 TrelloRedminer = (function() {
 
@@ -13,9 +14,20 @@ TrelloRedminer = (function() {
   function TrelloRedminer() {
     new TrelloRedminerBoardOptions(this);
 
+    this.checkOptions();
+
     observer = new TrelloRedminerObserver(this);
     observer.start();
   }
+
+  TrelloRedminer.prototype.checkOptions = function() {
+    var stored = {};
+    stored[board_id] = { api_key: '', project_id: '', redmine_url: REDMINE_URL };
+    chrome.storage.sync.get(stored, function(items) {
+      options_loaded = ((items.api_key != '') && (items.project_id != '') && (items.redmine_url != ''))
+    });
+  };
+
 
   TrelloRedminer.prototype.onCardOpened = function() {
     if($('[data-behavior="trelloRedminerToggler"]').length !== 0) {
@@ -36,6 +48,15 @@ TrelloRedminer = (function() {
           {cmd: 'time_entry_form'},
           function(html) {
             $('.other-actions > .u-clearfix').prepend(html);
+
+            if(options_loaded) {
+              $('.trello-redminer button').prop('disabled', false);
+              $('.trello-redminer button').removeClass('disabled');
+            } else {
+              $('.trello-redminer button').prop('disable', true);
+              $('.trello-redminer button').addClass('disabled');
+            }
+
             $('#js-time-entry-comments').val(card_title);
 
             $('[data-behavior="submitTimeEntry"]').click((function(_this) {
@@ -118,14 +139,26 @@ TrelloRedminerBoardOptions = (function() {
           var api_key = $('.trello-redminer-board-options .js-api-key').val();
           var project_id = $('.trello-redminer-board-options .js-project-id').val();
           var redmine_url = $('.trello-redminer-board-options .js-redmine-url').val();
+
+          if((api_key == '') || (project_id == '') || (redmine_url == '')) {
+            var status = $('.trello-redminer-board-options .status');
+            status.html('<b>No seas vago y completá todo</b>');
+            setTimeout(function() {
+              status.html('');
+            }, 3000);
+            return false
+          }
+
           var store = {};
           store[board_id] = { api_key: api_key, project_id: project_id, redmine_url: redmine_url };
 
           chrome.storage.sync.set(store, function() {
+            options_loaded = true;
             var status = $('.trello-redminer-board-options .status');
-            status.html('Opciones guardadas.');
+            status.html('<b>Opciones guardadas.</b>');
             setTimeout(function() {
               status.html('');
+              $('.trello-redminer-board-options').hide();
             }, 1000);
           });
 
