@@ -24,7 +24,7 @@ TrelloRedminer = (function() {
     var stored = {};
     stored[board_id] = { api_key: '', project_id: '', redmine_url: REDMINE_URL };
     chrome.storage.sync.get(stored, function(items) {
-      options_loaded = ((items.api_key != '') && (items.project_id != '') && (items.redmine_url != ''))
+      options_loaded = ((items[board_id].api_key != '') && (items[board_id].project_id != '') && (items[board_id].redmine_url != ''))
     });
   };
 
@@ -52,9 +52,13 @@ TrelloRedminer = (function() {
             if(options_loaded) {
               $('.trello-redminer button').prop('disabled', false);
               $('.trello-redminer button').removeClass('disabled');
+              $('.trello-redminer .js-message').html('');
+              $('.trello-redminer .js-message').hide();
             } else {
               $('.trello-redminer button').prop('disable', true);
               $('.trello-redminer button').addClass('disabled');
+              $('.trello-redminer .js-message').html('<b style="color:red">Para poder cargar hs en Redmine primero tenés que completar las opciones del tablero</b>');
+              $('.trello-redminer .js-message').show();
             }
 
             $('#js-time-entry-comments').val(card_title);
